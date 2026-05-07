@@ -1,0 +1,46 @@
+{
+    "ray": {
+        "password": "1234",
+        "voice": "ray.wav"
+    },
+    "sun": {
+        "password": "345",
+        "voice": "sun.wav"
+    },
+    "elio": {
+        "password": "2467",
+        "voice": "elio.wav"
+    },
+    "cse": {
+        "password": "12345",
+        "voice": "cse.wav"
+    },
+    "iot": {
+        "password": "235",
+        "voice": "iot.wav"
+    },
+    "wen": {
+        "password": "1234",
+        "voice": "wen.wav"
+    },
+    "reunka": {
+        "password": "121 123",
+        "voice": "reunka.wav"
+    },
+    "tony": {
+        "password": "123",
+        "voice": "tony.wav"
+    },
+    "rabbies": {
+        "password": "6896",
+        "voice": "rabbies.wav"
+    },
+    "mabel": {
+        "password": "1234",
+        "voice": "mabel.wav"
+    },
+    "wiki": {
+        "password": "345",
+        "voice": "wiki.wav"
+    }
+}

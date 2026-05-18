@@ -1,20 +1,25 @@
 import librosa
 import numpy as np
+import os
 
-def compare_audio(file1, file2):
-    # Load audio (no resampling issues)
-    y1, sr1 = librosa.load(file1, sr=None)
-    y2, sr2 = librosa.load(file2, sr=None)
+def compare_voices(file1, file2):
+    try:
+        file1 = os.path.join("voices", file1)
+        file2 = os.path.join("voices", file2)
 
-    # Extract MFCC features
-    mfcc1 = librosa.feature.mfcc(y=y1, sr=sr1, n_mfcc=20)
-    mfcc2 = librosa.feature.mfcc(y=y2, sr=sr2, n_mfcc=20)
+        audio1, sr1 = librosa.load(file1)
+        audio2, sr2 = librosa.load(file2)
 
-    # Take mean for comparison
-    mfcc1_mean = np.mean(mfcc1, axis=1)
-    mfcc2_mean = np.mean(mfcc2, axis=1)
+        mfcc1 = np.mean(librosa.feature.mfcc(y=audio1, sr=sr1), axis=1)
+        mfcc2 = np.mean(librosa.feature.mfcc(y=audio2, sr=sr2), axis=1)
 
-    # Euclidean distance
-    distance = np.linalg.norm(mfcc1_mean - mfcc2_mean)
+        distance = np.linalg.norm(mfcc1 - mfcc2)
 
-    return distance
+        print("Voice distance:", distance)
+
+        return distance < 50
+
+    except Exception as e:
+        print("Error comparing voices:", e)
+        return False
+    

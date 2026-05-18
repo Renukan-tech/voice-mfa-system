@@ -1,38 +1,36 @@
-import json
-import os
+import sqlite3
 from record import record_voice
 
 def register_user():
-    username = input("Enter username: ")
-    password = input("Enter password: ")  # ✅ normal input
+    username = input("Enter username: ").strip()
+    password = input("Enter password: ")
 
-    file_path = "users.json"
+    conn = sqlite3.connect("authentication.db")
+    cursor = conn.cursor()
 
-    # Load users safely
-    if os.path.exists(file_path):
-        try:
-            with open(file_path, "r") as f:
-                users = json.load(f)
-        except:
-            users = {}
-    else:
-        users = {}
+    # Check existing user
+    cursor.execute(
+        "SELECT * FROM users WHERE username=?",
+        (username,)
+    )
 
-    if username in users:
+    existing_user = cursor.fetchone()
+
+    if existing_user:
         print("❌ User already exists")
+        conn.close()
         return
 
     # Record voice
     voice_file = f"{username}.wav"
-    record_voice(voice_file)
-
+    record_voice(voice_file) 
     # Save user
-    users[username] = {
-        "password": password,
-        "voice": voice_file
-    }
+    cursor.execute(
+        "INSERT INTO users (username, password, voice_file) VALUES (?, ?, ?)",
+        (username, password, voice_file)
+    )
 
-    with open(file_path, "w") as f:
-        json.dump(users, f, indent=4)
+    conn.commit()
+    conn.close()
 
     print("✅ User registered successfully!")

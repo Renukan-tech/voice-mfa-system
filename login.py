@@ -1,93 +1,57 @@
-import datetime
-import json
-import os
-import random
+import sqlite3
+from datetime import datetime
+from comparison import compare_voices
 from record import record_voice
-from comparison import compare_audio
 
 def login_user():
-    username = input("Enter username: ")
-    password = input("Enter password: ")  # ✅ normal input
+    username = input("Enter username: ").strip()
+    password = input("Enter password: ")
 
-    file_path = "users.json"
+    # Connect database
+    conn = sqlite3.connect("authentication.db")
+    cursor = conn.cursor()
 
-    if not os.path.exists(file_path):
-        print("❌ No users found")
-        return
+    # Check user
+    cursor.execute(
+        "SELECT password, voice_file FROM users WHERE username=?",
+        (username,)
+    )
 
-    with open(file_path, "r") as f:
-        users = json.load(f)
+    user = cursor.fetchone()
 
-    if username not in users:
+    if not user:
         print("❌ User not found")
+        conn.close()
         return
 
-    if users[username]["password"] != password:
+    stored_password = user[0]
+    stored_voice = user[1]
+
+    # Check password
+    if password != stored_password:
         print("❌ Incorrect password")
+        conn.close()
         return
 
-    print("🔐 Password verified")
+    # Record test voice
+    test_voice = "test_voice.wav"
+    record_voice(test_voice)
 
-    file1 = os.path.join("voices", users[username]["voice"])
+    # Compare voices
+    result = compare_voices(stored_voice, test_voice)
 
-    # 🔁 Voice attempts
-    attempts = 0
-    success = False
+    if result:
+        print("✅ Login successful!")
 
-    while attempts < 3:
-        print(f"\n🎤 Voice Attempt {attempts + 1}/3")
-        temp_file = "temp.wav"
-        record_voice(temp_file)
+        # Save login log
+        cursor.execute(
+    "INSERT INTO logs (username, login_time, status) VALUES (?, datetime('now'), ?)",
+    (username, "Success")
+)
 
-        file2 = os.path.join("voices", temp_file)
-        score = compare_audio(file1, file2)
+        conn.commit()
 
-        print(f"Distance Score: {score:.2f}")
-
-        if score < 30:
-            print("✅ Voice Match - Access Granted")
-            success = True
-            break
-        else:
-            print("❌ Voice not matched")
-            attempts += 1
-
-    # 🔢 OTP fallback
-    if not success:
-        print("\n⚠️ Voice verification failed 3 times")
-        print("🔢 OTP verification required")
-
-        otp = random.randint(100000, 999999)
-        print(f"Your OTP is: {otp}")  # demo
-
-        user_otp = input("Enter OTP: ")
-
-        if str(otp) == user_otp:
-            print("✅ OTP Verified - Access Granted")
-            success = True
-        else:
-            print("❌ OTP Incorrect - Access Denied")
-            success = False
-
-    # 📜 Logging
-    log_entry = {
-        "username": username,
-        "time": str(datetime.datetime.now()),
-        "status": "Success" if success else "Failed"
-    }
-
-    log_file = "logs.json"
-
-    if os.path.exists(log_file):
-        try:
-            with open(log_file, "r") as f:
-                logs = json.load(f)
-        except:
-            logs = []
     else:
-        logs = []
+        print("❌ Voice does not match")
 
-    logs.append(log_entry)
-
-    with open(log_file, "w") as f:
-        json.dump(logs, f, indent=4)
+    conn.close()
